@@ -1,0 +1,10 @@
+*.pyc
+*.pyo
+*~
+*.so
+*.egg-info
+*.json
+.idea/
+.eggs/
+.ipynb_checkpoints/
+samples/
