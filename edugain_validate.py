@@ -13,7 +13,14 @@ def parse_args():
         '-s', dest='skip_optional', action='store_true', default=False,
         help="Skip optional schemas related to XSD wildcards."
     )
-    parser.add_argument(dest='xml_file', metavar='XML_FILE', help="XML input filename.")
+    parser.add_argument(
+        '--lazy', action='store_true', default=False,
+        help="Use xmlschema lazy validation mode (slower but use less memory)."
+    )
+
+
+    parser.add_argument(dest='xml_file', metavar='XML_FILE', nargs='+',
+                        help="XML filename.")
     return parser.parse_args()
 
 
@@ -22,6 +29,7 @@ if __name__ == '__main__':
     import logging
     import sys
     import xmlschema
+    import datetime
 
 
     # These are the explicit minimal namespaces required to validate eduGAIN XML,
@@ -71,18 +79,32 @@ if __name__ == '__main__':
     else:
         loglevel = logging.DEBUG
 
-
     locations = LOCATIONS.copy()
     if args.skip_optional:
-        print("Building schema instance with minimal metadata (no 'lax' wildcards validation) ...\n")
+        print("Building schema instance with minimal metadata (no 'lax' wildcards validation) ...")
     else:
         locations.update(OPTIONAL_LOCATIONS)
-        print("Building schema instance with full eduGAIN metadata ...\n")
+        print("Building schema instance with full eduGAIN metadata ...")
 
     schemas_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'schemas/')
     xsd_file = os.path.join(schemas_dir, 'shibboleth-metadata-1.0.xsd')
-    schema = xmlschema.XMLSchema(xsd_file, locations=locations, loglevel=loglevel)
 
-    print("Validate XML file {!r} ...\n".format(args.xml_file))
-    xmlschema.validate(args.xml_file, schema=schema)
-    print("Validation: OK")
+    start_dt = datetime.datetime.now()
+    schema = xmlschema.XMLSchema(xsd_file, locations=locations, loglevel=loglevel)
+    elapsed_time = datetime.datetime.now() - start_dt
+    print("Schema: OK (elapsed time: {})".format(elapsed_time))
+
+    for xml_file in args.xml_file:
+        print("\nValidate XML file {!r} ...".format(xml_file))
+
+        start_dt = datetime.datetime.now()
+
+        try:
+            xmlschema.validate(xml_file, schema=schema, lazy=args.lazy)
+        except xmlschema.XMLSchemaValidationError as err:
+            print("Validation: FAIL")
+            if args.verbosity >= 2:
+                print(err)
+        else:
+            elapsed_time = datetime.datetime.now() - start_dt
+            print("Validation: OK (elapsed time: {})".format(elapsed_time))
