@@ -8,15 +8,17 @@ The script works with annexed XSD resources located in `schemas/` directory,
 that are use used to validate the eduGAIN XML data.
 
 
-Usage
-=====
+Dependencies installation
+=========================
 
 After copied the script and the schemas (you can simply clone the repo as usual).
-To make the script works you have to install the *xmlschema* library in a Python
-Python 3.5+ environment. This can be done with the *pip* package manager using
-the command::
+To make the script works you have to install the libraries
+`signxml <https://github.com/XML-Security/signxml>`_ and
+`xmlschema <https://github.com/brunato/xmlschema>`_ in
+a Python Python 3.5+ environment. This can be done with the *pip* package manager
+using the command::
 
-    pip install xmlschema
+    pip install signxml xmlschema
 
 or alternatively using the requirements file::
 
@@ -27,9 +29,20 @@ or alternatively using the requirements file::
     administrative privileges. Otherwise you can do a user-space installation
     with `--user` option.
 
+
+Usage
+=====
+
 To check the XML data execute the script providing as argument the path to eduGAIN data file, eg.::
 
     python edugain_validate.py edugain-v1.xml
+
+If you also want to validate XML signature use the option `--cert`, providing the path
+to the file containing the signing key::
+
+    ./edugain_validate.py --cert=mds-v1.cer edugain-v1.xml
+
+For other script's options use ``./edugain_validate.py --help``.
 
 
 License
