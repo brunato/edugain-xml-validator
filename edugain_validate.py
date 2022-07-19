@@ -29,6 +29,10 @@ def parse_args():
         help="Use xmlschema lazy validation mode (slower but use less memory). "
              "Not used when XML signature validation is requested."
     )
+    parser.add_argument(
+        '--entity-id', default=None, metavar="entityID",
+        help="Validate a specific entityID only."
+    )
 
     parser.add_argument(dest='xml_file', metavar='XML_FILE', nargs='+',
                         help="XML filename.")
@@ -87,8 +91,8 @@ if __name__ == '__main__':
         'urn:oasis:names:tc:SAML:metadata:ui':
             'sstc-saml-metadata-ui-v1.0.xsd',
     }
-    if sys.version_info < (3, 5, 0):
-        sys.stderr.write("You need python 3.5 or later to run this program\n")
+    if sys.version_info < (3, 7, 0):
+        sys.stderr.write("You need python 3.7 or later to run this program\n")
         sys.exit(1)
 
     args = parse_args()
@@ -129,6 +133,14 @@ if __name__ == '__main__':
     elapsed_time = datetime.datetime.now() - start_dt
     print("Schema: OK (elapsed time: {})".format(elapsed_time))
 
+    if args.entity_id is None:
+        schema_path = path = None
+    else:
+        schema_path = '/md:EntitiesDescriptor/md:EntityDescriptor'
+        path = schema_path + f'[@entityID="{args.entity_id}"]'
+        schema = schema.maps.namespaces['urn:oasis:names:tc:SAML:2.0:metadata'][0]
+        namespaces = {'md': "urn:oasis:names:tc:SAML:2.0:metadata"}
+
     exit_code = 0
     for xml_file in args.xml_file:
         print("\nValidate XML file {!r} ...".format(xml_file))
@@ -144,7 +156,13 @@ if __name__ == '__main__':
                 start_dt = datetime.datetime.now()
                 xml_file = signed_xml_data
 
-            xmlschema.validate(xml_file, schema=schema, lazy=args.lazy)
+            xmlschema.validate(
+                xml_file,
+                schema=schema,
+                lazy=args.lazy,
+                path=path,
+                schema_path=schema_path,
+            )
 
         except xmlschema.XMLSchemaValidationError as err:
             exit_code = 1

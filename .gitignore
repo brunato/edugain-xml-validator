@@ -4,6 +4,8 @@
 *.so
 *.egg-info
 *.json
+*.xml
+*.xsd
 .idea/
 .eggs/
 .ipynb_checkpoints/
